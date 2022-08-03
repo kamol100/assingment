@@ -12,14 +12,16 @@ class Csv
 {
     public static function data($file)
     {
-        $handle = fopen($file, 'r');
+        if (!($file = fopen($file, 'r'))) {
+            throw new \RuntimeException('Failed to open file');
+        }
 
         $csvData = [];
-        while (! feof($handle)) {
-            $fpTotal = fgetcsv($handle, 0, ',', '\\');
+        while (! feof($file)) {
+            $fpTotal = fgetcsv($file, 0, ',', '\\');
             array_push($csvData, $fpTotal);
         }
-        fclose($handle);
+        fclose($file);
 
         return $csvData;
     }

@@ -34,8 +34,9 @@ if(isset($_POST['submit'])){
 }
 
 ?>
-
-<form method="post" action="index.php" enctype="multipart/form-data">
-    <input type="file" name="file" accept=".csv">
-    <input type="submit" name="submit" value="Calculate" id="">
-</form>
+<div class="upload" style="display: flex; justify-content: space-around; margin-top: 50px">
+    <form method="post" action="index.php" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".csv">
+        <input type="submit" name="submit" value="Calculate" id="">
+    </form>
+</div>

@@ -89,10 +89,6 @@ class CalculateWeeklyWithdraw
         return $this->operation;
     }
 
-    public function getUser()
-    {
-        return $this->user;
-    }
 
     public function toEuro($amount, $currency)
     {
@@ -112,7 +108,9 @@ class CalculateWeeklyWithdraw
             count($this->weeklyTotalWithdraw[$this->getUserId()][$this->getYear()][$this->getWeekNumber()]) <= $this->weeklyFreeTransactionLimit) {
 
             $currentTotal = array_sum($this->weeklyTotalWithdraw[$this->getUserId()][$this->getYear()][$this->getWeekNumber()]);
+
             $this->weeklyTransactionCount++;
+
             if($currentTotal > $this->weeklyFreeLimit){
                 return $currentTotal;
             }

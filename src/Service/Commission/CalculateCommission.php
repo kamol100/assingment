@@ -24,11 +24,11 @@ class CalculateCommission
 
     protected $amount;
 
-    protected $withdraw_commission_fee_private_user = 0.3;
+    protected $withdrawCommissionFeePrivateUser = 0.3;
 
-    protected $withdraw_commission_fee_business_user = 0.5;
+    protected $withdrawCommissionFeeBusinessUser = 0.5;
 
-    protected $deposit_commission_fee = 0.03;
+    protected $depositCommissionFee = 0.03;
 
     protected $weeklyWithdraw;
 
@@ -59,21 +59,21 @@ class CalculateCommission
     {
         $withdraw = $this->weeklyWithdraw->getWeeklyPrivateUserWithdraw();
         $amount = $withdraw[$this->user->getId()][$this->year][$this->weekNumber][$this->rowId]['commission_amount'];
-        $commission = ($amount * $this->withdraw_commission_fee_private_user) / 100;
+        $commission = ($amount * $this->withdrawCommissionFeePrivateUser) / 100;
 
         return $this->output($commission);
     }
 
     public function depositCommission()
     {
-        $commission = ($this->amount * $this->deposit_commission_fee) / 100;
+        $commission = ($this->amount * $this->depositCommissionFee) / 100;
 
         return $this->output($commission);
     }
 
     public function businessWithdraw()
     {
-        $commission = ($this->amount * $this->withdraw_commission_fee_business_user) / 100;
+        $commission = ($this->amount * $this->withdrawCommissionFeeBusinessUser) / 100;
 
         return $this->output($commission);
     }
