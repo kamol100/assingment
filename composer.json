@@ -1,0 +1,15 @@
+{
+    "name": "homework/assignment",
+    "description": "assignment",
+    "autoload": {
+        "psr-4": {
+            "": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "kamol"
+        }
+    ],
+    "require": {}
+}
