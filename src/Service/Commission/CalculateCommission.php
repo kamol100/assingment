@@ -14,9 +14,7 @@ class CalculateCommission
 {
     protected $user;
 
-    protected $year;
-
-    protected $weekNumber;
+    protected $date;
 
     protected $rowId;
 
@@ -32,13 +30,12 @@ class CalculateCommission
 
     protected $weeklyWithdraw;
 
-    public function __construct(CalculateWeeklyWithdraw $weeklyWithdraw, User $user, $operation_type, $year, $weekNumber, $amount, $rowId)
+    public function __construct(CalculateWeeklyWithdraw $weeklyWithdraw, User $user, $operation_type, $date, $amount, $rowId)
     {
         $this->user = $user;
         $this->amount = $amount;
-        $this->year = $year;
+        $this->date = $date;
         $this->operation_type = $operation_type;
-        $this->weekNumber = $weekNumber;
         $this->weeklyWithdraw = $weeklyWithdraw;
         $this->rowId = $rowId;
     }
@@ -58,7 +55,8 @@ class CalculateCommission
     public function privateUserWithdraw()
     {
         $withdraw = $this->weeklyWithdraw->getWeeklyPrivateUserWithdraw();
-        $amount = $withdraw[$this->user->getId()][$this->year][$this->weekNumber][$this->rowId]['commission_amount'];
+        $key = $this->user->getId().'-'.date('Y-W', strtotime($this->date));
+        $amount = $withdraw[$key][$this->rowId]['commission_amount'];
         $commission = ($amount * $this->withdrawCommissionFeePrivateUser) / 100;
 
         return $this->output($commission);
