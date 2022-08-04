@@ -10,20 +10,25 @@ namespace Service\Commission;
 
 
 use Service\Currency\ExchangeRate;
+use Service\Interfaces\CommissionInterface;
 
-class CalculateWeeklyWithdraw
+class Withdraw implements CommissionInterface
 {
+    const PRIVATE_USER_WITHDRAW_FEE = '0.3';
+
+    const BUSINESS_USER_WITHDRAW_FEE = '0.5';
+
     protected $user;
 
     protected $date;
 
     protected $operation;
 
-    protected $rowId;
+    protected $amount;
+
+    protected $currency;
 
     protected $transactionKey;
-
-    protected $weeklyPrivateUserWithdraw = [];
 
     protected $weeklyFreeLimit = 1000;
 
@@ -51,13 +56,6 @@ class CalculateWeeklyWithdraw
         return $this->transactionKey;
     }
 
-    public function setRowId($rowId)
-    {
-        $this->rowId = $rowId;
-
-        return $this;
-    }
-
 
     public function getUserType()
     {
@@ -71,17 +69,31 @@ class CalculateWeeklyWithdraw
         return $this;
     }
 
-    public function getDate()
-    {
-        return $this->date;
-    }
-
-
     public function setOperation($operation)
     {
         $this->operation = $operation;
 
         return $this;
+    }
+
+    public function setAmount($amount){
+        $this->amount = $amount;
+
+        return $this;
+    }
+
+    public function getAmount(){
+        return $this->amount;
+    }
+
+    public function setCurrency($currency){
+        $this->currency = $currency;
+
+        return $this;
+    }
+
+    public function getCurrency(){
+        return $this->currency;
     }
 
     public function getOperation()
@@ -96,14 +108,11 @@ class CalculateWeeklyWithdraw
 
     }
 
-    public function getWeeklyPrivateUserWithdraw()
-    {
-        return $this->weeklyPrivateUserWithdraw;
-    }
 
-
-    public function calculateWeeklyTotalWithdraw($amount_in_euro)
+    public function calculateWeeklyTotalWithdraw()
     {
+        $amount_in_euro = $this->toEuro($this->getAmount(), $this->getCurrency());
+
         if (isset($this->weeklyTotalWithdraw[$this->getTransactionKey()]) &&
             count($this->weeklyTotalWithdraw[$this->getTransactionKey()]) <= $this->weeklyFreeTransactionLimit) {
 
@@ -126,14 +135,16 @@ class CalculateWeeklyWithdraw
         return $amount_in_euro;
     }
 
-    public function commissionAbleAmount($total, $amount, $currency)
+    public function commissionAbleAmount()
     {
+        $total = $this->calculateWeeklyTotalWithdraw();
+
         $withdrawItems = count($this->weeklyTotalWithdraw[$this->getTransactionKey()]);
 
         if ($total > $this->weeklyFreeLimit && $this->weeklyTransactionCount <= $withdrawItems) {
             $result = $total - $this->weeklyFreeLimit;
-            if($currency != 'EUR'){
-                 return (new ExchangeRate())->exchangeTo($result, $currency);
+            if($this->getCurrency() != 'EUR'){
+                 return (new ExchangeRate())->exchangeTo($result, $this->getCurrency());
             }
            return $result;
 
@@ -142,25 +153,27 @@ class CalculateWeeklyWithdraw
             return 0;
         }
         if($this->weeklyTransactionCount > $withdrawItems){
-            return $amount;
+            return $this->getAmount();
         }
 
-        return $amount;
+        return $this->getAmount();
     }
-    public function calculateWeeklyWithdraw($amount, $currency)
+
+    public function output()
     {
         if ($this->getOperation() == 'withdraw' && $this->getUserType() == 'private') {
-            $amount_in_euro = $this->toEuro($amount, $currency);
 
-            $total = $this->calculateWeeklyTotalWithdraw($amount_in_euro);
-            $commission_amount = $this->commissionAbleAmount($total, $amount, $currency);
+            $commission = $this->commissionAbleAmount();
+            $commission = ($commission * self::PRIVATE_USER_WITHDRAW_FEE) / 100;
 
-            $this->weeklyPrivateUserWithdraw[$this->getTransactionKey()][$this->rowId] = [
-                'amount_in_euro' => $amount_in_euro,
-                $currency => $amount,
-                'commission_amount' => $commission_amount,
-                'weekly_transaction_count' => $this->weeklyTransactionCount
-            ];
+            return number_format(round($commission, 2), 2);
+        }
+
+        if ($this->getOperation() == 'withdraw' && $this->getUserType() == 'business') {
+            $commission = ($this->getAmount() * self::BUSINESS_USER_WITHDRAW_FEE) / 100;
+
+            return number_format(round($commission, 2), 2);
         }
     }
+
 }

@@ -9,9 +9,9 @@
 namespace Service\Transaction;
 
 
-use Service\Commission\CalculateWeeklyWithdraw;
+use Service\Commission\Withdraw;
+use Service\Commission\Deposit;
 use Service\User\User;
-use Service\Commission\CalculateCommission;
 
 class TransactionCsv
 {
@@ -25,7 +25,7 @@ class TransactionCsv
 
     public function commission()
     {
-        $weeklyWithdraw = new CalculateWeeklyWithdraw();
+        $weeklyWithdraw = new Withdraw();
 
         for ($index = 0; $index < count($this->data); $index++) {
             $date = $this->data[$index][0] ?? null;
@@ -39,10 +39,20 @@ class TransactionCsv
 
                 $transactionKey = $userId.'-'.date('Y-W', strtotime($date));
                 $user = new User($userId, $user_type);
-                $weeklyWithdraw->setUser($user)->setRowId($index)->setTransactionKey($transactionKey)->setDate($date)->setOperation($operation_type);
-                $weeklyWithdraw->calculateWeeklyWithdraw($amount, $currency);
-                $commission = new CalculateCommission($weeklyWithdraw, $user, $operation_type, $date, $amount, $index);
-                $this->commission[] = $commission->calculate();
+
+                if($operation_type == 'deposit'){
+                    $deposit = new Deposit($amount);
+                    $this->commission[] = $deposit->output();
+                }else{
+                    $weeklyWithdraw->setUser($user)
+                        ->setTransactionKey($transactionKey)
+                        ->setDate($date)
+                        ->setOperation($operation_type)
+                        ->setAmount($amount)
+                        ->setCurrency($currency);
+
+                    $this->commission[] = $weeklyWithdraw->output();
+                }
 
             }
         }
