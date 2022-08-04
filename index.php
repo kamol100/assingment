@@ -5,8 +5,13 @@ use Service\Transaction\TransactionCsv;
 
 
 $transactionCommission = [];
-if(isset($_POST['submit'])){
+
+if(isset($_POST['submit']))
+{
+
+
     $file = $_FILES['file']['tmp_name'];
+
     if($file){
         $csvImport = new Csv();
         $data = $csvImport::data($file);
@@ -15,7 +20,6 @@ if(isset($_POST['submit'])){
     }else{
         echo 'Invalid file path';
     }
-
 
 }
 
