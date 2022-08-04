@@ -21,6 +21,8 @@ class CalculateWeeklyWithdraw
 
     protected $rowId;
 
+    protected $transactionKey;
+
     protected $weeklyPrivateUserWithdraw = [];
 
     protected $weeklyFreeLimit = 1000;
@@ -38,6 +40,17 @@ class CalculateWeeklyWithdraw
         return $this;
     }
 
+    public function setTransactionKey($transactionKey)
+    {
+        $this->transactionKey = $transactionKey;
+
+        return $this;
+    }
+
+    public function getTransactionKey(){
+        return $this->transactionKey;
+    }
+
     public function setRowId($rowId)
     {
         $this->rowId = $rowId;
@@ -45,10 +58,6 @@ class CalculateWeeklyWithdraw
         return $this;
     }
 
-    public function getUserId()
-    {
-        return $this->user->getId();
-    }
 
     public function getUserType()
     {
@@ -93,33 +102,33 @@ class CalculateWeeklyWithdraw
     }
 
 
-    public function calculateWeeklyTotalWithdraw($amount_in_euro, $key)
+    public function calculateWeeklyTotalWithdraw($amount_in_euro)
     {
-        if (isset($this->weeklyTotalWithdraw[$key]) &&
-            count($this->weeklyTotalWithdraw[$key]) <= $this->weeklyFreeTransactionLimit) {
+        if (isset($this->weeklyTotalWithdraw[$this->getTransactionKey()]) &&
+            count($this->weeklyTotalWithdraw[$this->getTransactionKey()]) <= $this->weeklyFreeTransactionLimit) {
 
-            $currentTotal = array_sum($this->weeklyTotalWithdraw[$key]);
+            $currentTotal = array_sum($this->weeklyTotalWithdraw[$this->getTransactionKey()]);
 
             $this->weeklyTransactionCount++;
 
             if($currentTotal > $this->weeklyFreeLimit){
                 return $currentTotal;
             }
-            $this->weeklyTotalWithdraw[$key][] = $amount_in_euro;
+            $this->weeklyTotalWithdraw[$this->getTransactionKey()][] = $amount_in_euro;
 
-            return array_sum($this->weeklyTotalWithdraw[$key]);
+            return array_sum($this->weeklyTotalWithdraw[$this->getTransactionKey()]);
         }
 
         $this->weeklyTransactionCount = 1;
-        $this->weeklyTotalWithdraw[$key][] = $amount_in_euro;
+        $this->weeklyTotalWithdraw[$this->getTransactionKey()][] = $amount_in_euro;
 
 
         return $amount_in_euro;
     }
 
-    public function commissionAbleAmount($total, $amount, $currency, $key)
+    public function commissionAbleAmount($total, $amount, $currency)
     {
-        $withdrawItems = count($this->weeklyTotalWithdraw[$key]);
+        $withdrawItems = count($this->weeklyTotalWithdraw[$this->getTransactionKey()]);
 
         if ($total > $this->weeklyFreeLimit && $this->weeklyTransactionCount <= $withdrawItems) {
             $result = $total - $this->weeklyFreeLimit;
@@ -142,12 +151,11 @@ class CalculateWeeklyWithdraw
     {
         if ($this->getOperation() == 'withdraw' && $this->getUserType() == 'private') {
             $amount_in_euro = $this->toEuro($amount, $currency);
-            $key = $this->getUserId().'-'.date('Y-W', strtotime($this->getDate()));
 
-            $total = $this->calculateWeeklyTotalWithdraw($amount_in_euro, $key);
-            $commission_amount = $this->commissionAbleAmount($total, $amount, $currency, $key);
+            $total = $this->calculateWeeklyTotalWithdraw($amount_in_euro);
+            $commission_amount = $this->commissionAbleAmount($total, $amount, $currency);
 
-            $this->weeklyPrivateUserWithdraw[$key][$this->rowId] = [
+            $this->weeklyPrivateUserWithdraw[$this->getTransactionKey()][$this->rowId] = [
                 'amount_in_euro' => $amount_in_euro,
                 $currency => $amount,
                 'commission_amount' => $commission_amount,

@@ -4,13 +4,14 @@ use Service\Imports\Csv;
 use Service\Transaction\TransactionCsv;
 
 
-$transaction = [];
+$transactionCommission = [];
 if(isset($_POST['submit'])){
     $file = $_FILES['file']['tmp_name'];
     if($file){
         $csvImport = new Csv();
         $data = $csvImport::data($file);
         $transaction = new TransactionCsv($data);
+        $transactionCommission = $transaction->commission();
     }else{
         echo 'Invalid file path';
     }
@@ -26,7 +27,7 @@ if(isset($_POST['submit'])){
     </form>
 </div>
 <div class="transaction" style="display: flex; justify-content: space-around; margin-top: 30px">
-    <?php foreach ($transaction->commission() as $commission) { ?>
+    <?php foreach ($transactionCommission as $commission) { ?>
         <?php echo $commission; ?> <br/>
     <?php } ?>
 
